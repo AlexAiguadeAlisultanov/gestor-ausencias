@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: gestor-ausencias
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+    autoDeploy: true

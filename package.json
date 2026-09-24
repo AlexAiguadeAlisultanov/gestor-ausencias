@@ -1,0 +1,23 @@
+{
+  "name": "gestor-ausencias",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gestor de vacaciones, permisos y bajas para una plantilla en equipos.",
+  "license": "MIT",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n API,WEB -c blue,magenta \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:web": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=web",
+    "start": "npm run start --workspace=server",
+    "test": "npm run test --workspace=server",
+    "comprobar": "npm run comprobar --workspace=server && npm run comprobar --workspace=web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
