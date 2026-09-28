@@ -40,36 +40,46 @@ export function Navegacion() {
     >
       <div
         className="contenedor"
-        style={{ display: "flex", alignItems: "center", gap: 16, paddingBlock: 12, flexWrap: "wrap" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 16,
+          rowGap: 8,
+          paddingBlock: 12,
+          flexWrap: "wrap",
+        }}
       >
-        <strong style={{ fontSize: 14, letterSpacing: "0.02em" }}>{t("appNombre")}</strong>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <strong style={{ fontSize: 14, letterSpacing: "0.02em" }}>{t("appNombre")}</strong>
 
-        <nav style={{ display: "flex", gap: 4, flexWrap: "wrap", marginInlineStart: 8 }}>
-          <NavLink to="/panel" style={estiloEnlace}>
-            <LayoutGrid size={16} strokeWidth={1.75} />
-            {t("navMiPanel")}
-          </NavLink>
-          {(empleado.rol === "responsable" || empleado.rol === "rrhh") && (
-            <NavLink to="/equipo" style={estiloEnlace}>
-              <Inbox size={16} strokeWidth={1.75} />
-              {t("navBandeja")}
+          <nav style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+            <NavLink to="/panel" style={estiloEnlace}>
+              <LayoutGrid size={16} strokeWidth={1.75} />
+              {t("navMiPanel")}
             </NavLink>
-          )}
-          {(empleado.rol === "responsable" || empleado.rol === "rrhh") && (
-            <NavLink to="/calendario" style={estiloEnlace}>
-              <CalendarDays size={16} strokeWidth={1.75} />
-              {t("navCalendario")}
-            </NavLink>
-          )}
-          {empleado.rol === "rrhh" && (
-            <NavLink to="/admin" style={estiloEnlace}>
-              <Settings size={16} strokeWidth={1.75} />
-              {t("navAdmin")}
-            </NavLink>
-          )}
-        </nav>
+            {(empleado.rol === "responsable" || empleado.rol === "rrhh") && (
+              <NavLink to="/equipo" style={estiloEnlace}>
+                <Inbox size={16} strokeWidth={1.75} />
+                {t("navBandeja")}
+              </NavLink>
+            )}
+            {(empleado.rol === "responsable" || empleado.rol === "rrhh") && (
+              <NavLink to="/calendario" style={estiloEnlace}>
+                <CalendarDays size={16} strokeWidth={1.75} />
+                {t("navCalendario")}
+              </NavLink>
+            )}
+            {empleado.rol === "rrhh" && (
+              <NavLink to="/admin" style={estiloEnlace}>
+                <Settings size={16} strokeWidth={1.75} />
+                {t("navAdmin")}
+              </NavLink>
+            )}
+          </nav>
+        </div>
 
-        <div style={{ marginInlineStart: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span className="ocultar-movil" style={{ fontSize: 13, color: "var(--texto-tenue)" }}>
             {empleado.nombre}
           </span>

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, Inbox, TriangleAlert, XCircle } from "lucide-react";
 import { api, ErrorPeticion } from "../api/cliente";
+import { useSesion } from "../api/sesion";
 import { useIdioma } from "../i18n/contexto";
 import { EstadoVacio } from "../components/EstadoVacio";
-import type { DiaCobertura, Empleado, Solicitud, TipoAusencia } from "../api/tipos";
+import type { DiaCobertura, Empleado, Equipo, Solicitud, TipoAusencia } from "../api/tipos";
 
 const CLAVE_TIPO: Record<TipoAusencia, "tipoVacaciones" | "tipoAsuntosPropios" | "tipoMedico" | "tipoBaja" | "tipoFormacion"> = {
   vacaciones: "tipoVacaciones",
@@ -15,38 +16,63 @@ const CLAVE_TIPO: Record<TipoAusencia, "tipoVacaciones" | "tipoAsuntosPropios" |
 
 export function BandejaEquipo() {
   const { t, formatearFecha } = useIdioma();
+  const { empleado } = useSesion();
+  const esRrhh = empleado?.rol === "rrhh";
   const [pendientes, setPendientes] = useState<Solicitud[] | null>(null);
   const [miembros, setMiembros] = useState<Empleado[]>([]);
   const [cobertura, setCobertura] = useState<Record<number, DiaCobertura[]>>({});
   const [comentarios, setComentarios] = useState<Record<number, string>>({});
   const [procesando, setProcesando] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [equipos, setEquipos] = useState<Equipo[]>([]);
+  const [equipoId, setEquipoId] = useState<number | null>(null);
 
-  async function recargar() {
-    const [p, m] = await Promise.all([
-      api.get<{ solicitudes: Solicitud[] }>("/equipo/pendientes"),
-      api.get<{ miembros: Empleado[] }>("/equipo/miembros"),
-    ]);
-    setPendientes(p.solicitudes);
-    setMiembros(m.miembros);
-    for (const s of p.solicitudes) {
-      api
-        .get<{ cobertura: DiaCobertura[] }>(`/equipo/solicitudes/${s.id}/cobertura`)
-        .then((r) => setCobertura((prev) => ({ ...prev, [s.id]: r.cobertura })))
-        .catch(() => {});
+  useEffect(() => {
+    if (!esRrhh) return;
+    api
+      .get<{ equipos: Equipo[] }>("/admin/equipos")
+      .then((r) => {
+        setEquipos(r.equipos);
+        setEquipoId((actual) => actual ?? r.equipos[0]?.id ?? null);
+      })
+      .catch(() => {});
+  }, [esRrhh]);
+
+  async function recargar(idEquipoActual: number | null) {
+    setError(null);
+    try {
+      const query = esRrhh ? `?equipoId=${idEquipoActual}` : "";
+      const [p, m] = await Promise.all([
+        api.get<{ solicitudes: Solicitud[] }>(`/equipo/pendientes${query}`),
+        api.get<{ miembros: Empleado[] }>(`/equipo/miembros${query}`),
+      ]);
+      setPendientes(p.solicitudes);
+      setMiembros(m.miembros);
+      for (const s of p.solicitudes) {
+        api
+          .get<{ cobertura: DiaCobertura[] }>(`/equipo/solicitudes/${s.id}/cobertura${query}`)
+          .then((r) => setCobertura((prev) => ({ ...prev, [s.id]: r.cobertura })))
+          .catch(() => {});
+      }
+    } catch (err) {
+      setPendientes(null);
+      setError(err instanceof ErrorPeticion ? err.message : t("errorGenerico"));
     }
   }
 
   useEffect(() => {
-    recargar();
-  }, []);
+    if (esRrhh && !equipoId) return;
+    recargar(equipoId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [esRrhh, equipoId]);
 
   async function decidir(id: number, decision: "aprobada" | "rechazada") {
     setError(null);
     setProcesando(id);
     try {
-      await api.post(`/equipo/solicitudes/${id}/decision`, { decision, comentario: comentarios[id] || undefined });
-      await recargar();
+      const query = esRrhh ? `?equipoId=${equipoId}` : "";
+      await api.post(`/equipo/solicitudes/${id}/decision${query}`, { decision, comentario: comentarios[id] || undefined });
+      await recargar(equipoId);
     } catch (err) {
       setError(err instanceof ErrorPeticion ? err.message : t("errorGenerico"));
     } finally {
@@ -58,16 +84,42 @@ export function BandejaEquipo() {
 
   return (
     <div className="contenedor" style={{ paddingBlock: "var(--espacio-5)", display: "flex", flexDirection: "column", gap: "var(--espacio-4)" }}>
-      <div>
-        <span className="numero-seccion" style={{ fontSize: 13 }}>02</span>
-        <h1 className="titular" style={{ fontSize: 22, marginTop: 4 }}>
-          {t("bandejaTitulo")}
-        </h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <span className="numero-seccion" style={{ fontSize: 13 }}>02</span>
+          <h1 className="titular" style={{ fontSize: 22, marginTop: 4 }}>
+            {t("bandejaTitulo")}
+          </h1>
+        </div>
+
+        {esRrhh && equipos.length > 0 && (
+          <select
+            aria-label={t("calendarioEquipoSelector")}
+            value={equipoId ?? ""}
+            onChange={(e) => setEquipoId(Number(e.target.value))}
+            style={{
+              padding: "8px 10px",
+              borderRadius: "var(--radio-s)",
+              border: "1px solid var(--borde)",
+              background: "var(--superficie-alta)",
+            }}
+          >
+            {equipos.map((eq) => (
+              <option key={eq.id} value={eq.id}>
+                {eq.nombre}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
-      {error && <p role="alert" style={{ color: "var(--error)", fontSize: 13 }}>{error}</p>}
+      {error && <EstadoVacio icono={<TriangleAlert size={28} strokeWidth={1.5} />}>{error}</EstadoVacio>}
 
-      {pendientes && pendientes.length === 0 && (
+      {!error && esRrhh && !equipoId && (
+        <EstadoVacio icono={<Inbox size={28} strokeWidth={1.5} />}>{t("bandejaEligeEquipo")}</EstadoVacio>
+      )}
+
+      {!error && pendientes && pendientes.length === 0 && (
         <EstadoVacio icono={<Inbox size={28} strokeWidth={1.5} />}>{t("bandejaVacia")}</EstadoVacio>
       )}
 

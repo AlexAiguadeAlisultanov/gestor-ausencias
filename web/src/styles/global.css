@@ -92,6 +92,11 @@ button {
   cursor: pointer;
 }
 
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--acento);
+}
+
 a {
   color: inherit;
 }
@@ -160,6 +165,7 @@ a {
   background: var(--superficie-alta);
   color: var(--texto);
   font-weight: 500;
+  text-decoration: none;
   transition: background var(--duracion) var(--curva), border-color var(--duracion) var(--curva),
     transform var(--duracion) var(--curva);
 }

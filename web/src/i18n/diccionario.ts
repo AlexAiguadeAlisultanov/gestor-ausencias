@@ -127,6 +127,11 @@ export const diccionario = {
     ca: "Comentari (opcional en aprovar, recomanat en rebutjar)",
     en: "Comment (optional to approve, recommended to reject)",
   },
+  bandejaEligeEquipo: {
+    es: "Elige un equipo arriba para ver sus solicitudes.",
+    ca: "Tria un equip a dalt per veure les seves sol·licituds.",
+    en: "Pick a team above to see its requests.",
+  },
 
   // --- Calendario de equipo -------------------------------------------
   calendarioTitulo: { es: "Calendario de equipo", ca: "Calendari de l'equip", en: "Team calendar" },

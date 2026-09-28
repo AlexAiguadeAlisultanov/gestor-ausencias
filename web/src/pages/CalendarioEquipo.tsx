@@ -61,14 +61,13 @@ export function CalendarioEquipo() {
       });
   }, [desde, hasta, equipoId, empleado]);
 
-  const nombreMes = useMemo(
-    () =>
-      new Intl.DateTimeFormat(idioma === "es" ? "es-ES" : idioma === "ca" ? "ca-ES" : "en-GB", {
-        month: "long",
-        year: "numeric",
-      }).format(fecha),
-    [fecha, idioma],
-  );
+  const nombreMes = useMemo(() => {
+    const formateado = new Intl.DateTimeFormat(idioma === "es" ? "es-ES" : idioma === "ca" ? "ca-ES" : "en-GB", {
+      month: "long",
+      year: "numeric",
+    }).format(fecha);
+    return formateado.charAt(0).toUpperCase() + formateado.slice(1);
+  }, [fecha, idioma]);
 
   function solicitudEnDia(empleadoId: number, dia: number): Solicitud | undefined {
     const iso = `${anio}-${pad(mes + 1)}-${pad(dia)}`;
@@ -98,7 +97,7 @@ export function CalendarioEquipo() {
           <button className="boton" aria-label={t("calendarioMesAnterior")} onClick={() => setFecha(new Date(anio, mes - 1, 1))}>
             <ChevronLeft size={16} strokeWidth={1.75} />
           </button>
-          <span style={{ minWidth: 140, textAlign: "center", textTransform: "capitalize", fontSize: 14 }}>{nombreMes}</span>
+          <span style={{ minWidth: 140, textAlign: "center", fontSize: 14 }}>{nombreMes}</span>
           <button className="boton" aria-label={t("calendarioMesSiguiente")} onClick={() => setFecha(new Date(anio, mes + 1, 1))}>
             <ChevronRight size={16} strokeWidth={1.75} />
           </button>
